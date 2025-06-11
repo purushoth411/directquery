@@ -4,3 +4,7 @@
 .ql-container{
   min-height: 150px;
 }
+
+.tippy-content {
+  background-color: whitesmoke;
+}

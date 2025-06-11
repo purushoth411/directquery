@@ -1,15 +1,14 @@
 import React, { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { useAuth } from "../utils/idb";
-// import DataTable from "react-data-table-component";
 import { Funnel, RefreshCcw } from "lucide-react";
-
-import DataTable from 'datatables.net-react';
-import DT from 'datatables.net-dt';
-import $ from 'jquery';
+import DataTable from "datatables.net-react";
+import DT from "datatables.net-dt";
+import $ from "jquery";
+import tippy from "tippy.js";
+import "tippy.js/dist/tippy.css";
 
 import DatePicker from "react-datepicker";
-
 import "react-datepicker/dist/react-datepicker.css";
 
 const DirectQueryList = () => {
@@ -23,22 +22,45 @@ const DirectQueryList = () => {
     keyword: "",
     status: "",
   });
-  DataTable.use(DT);
-
   const { user, userFetched, permissionDenied } = useAuth();
   const [fetching, setFetching] = useState(false);
 
+  DataTable.use(DT);
+
   useEffect(() => {
-    if (user ) {
-      fetchQueries();
+    if (user) {
+      fetchQueries(false);
     }
   }, [user]);
 
-  const fetchQueries = async () => {
-    if (!user ) return;
-    if (fetching) return; // Prevent multiple fetches
+  useEffect(() => {
+    // Apply tippy after queries are rendered
+    const interval = setTimeout(() => {
+      tippy(".tippy-html", {
+        allowHTML: true,
+        interactive: true,
+        maxWidth: 500,
+        theme: "light-border",
+        placement: "auto",
+      });
+    }, 100); // Short delay to ensure DOM is ready
+
+    return () => clearTimeout(interval);
+  }, [queries]);
+
+  const fetchQueries = async (needfilters = false) => {
+    if (!user || fetching) return;
     setFetching(true);
     setLoading(true);
+    let payload = {
+      user_id: user?.id,
+      user_type: user?.user_type,
+    };
+
+    if (needfilters) {
+      payload.filters = filters;
+    }
+
     try {
       const response = await fetch(
         "https://instacrm.rapidcollaborate.com/directqueryapi/get-direct-queries",
@@ -47,11 +69,7 @@ const DirectQueryList = () => {
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({
-            user_id: user?.id,
-            user_type: user?.user_type,
-            filters,
-          }),
+          body: JSON.stringify(payload),
         }
       );
 
@@ -80,12 +98,6 @@ const DirectQueryList = () => {
     }).format(date);
   };
 
-  const stripHtml = (html) => {
-    const tmp = document.createElement("div");
-    tmp.innerHTML = html;
-    return tmp.textContent || tmp.innerText || "";
-  };
-
   const handleFilterChange = (e) => {
     const { name, value } = e.target;
     setFilters((prev) => ({ ...prev, [name]: value }));
@@ -93,146 +105,111 @@ const DirectQueryList = () => {
 
   const handleFilterSubmit = (e) => {
     e.preventDefault();
-    if(startDate || endDate){
-      if(startDate && endDate){
-
-      }else{
-        toast.error("Please select both From and End Date");
-        return;
-      }
+    if ((startDate && !endDate) || (!startDate && endDate)) {
+      toast.error("Please select both From and End Date");
+      return;
     }
-    fetchQueries();
+    fetchQueries(true);
   };
 
-  const handleRefresh = () => {
+  const handleRefresh = async () => {
     setFilters({
       startDate: "",
       endDate: "",
       status: "",
       keyword: "",
     });
-    fetchQueries();
+    setStartDate(null);
+    setEndDate(null);
+    await fetchQueries(false);
   };
 
-  /**
- * Safely truncate HTML string to a given number of characters,
- * preserving valid tags.
- */
-function truncateHTML(html, limit) {
-  const div = document.createElement('div');
-  div.innerHTML = html;
-
-  let charCount = 0;
-
-  function truncateNode(node) {
-    if (charCount >= limit) {
-      node.parentNode.removeChild(node);
-      return true; // Removed
-    }
-
-    if (node.nodeType === Node.TEXT_NODE) {
-      const remaining = limit - charCount;
-      if (node.textContent.length > remaining) {
-        node.textContent = node.textContent.slice(0, remaining) + '…';
-        charCount = limit;
-      } else {
-        charCount += node.textContent.length;
-      }
-    } else if (node.nodeType === Node.ELEMENT_NODE) {
-      const children = Array.from(node.childNodes);
-      for (const child of children) {
-        if (truncateNode(child)) break;
-      }
-    }
-
-    return false;
-  }
-
-  truncateNode(div);
-  return div.innerHTML;
-}
-
-
- const columns = [
-   
+  const columns = [
     {
-        title: 'Query Details',
-        data: 'query_details',
-        orderable: false,
-        render: function (data, type, row) {
-            const div = document.createElement('div');
-            div.innerHTML = data || '';
-            const truncated = div.innerText.length > 100
-                ? div.innerText.substring(0, 100) + '...'
-                : div.innerText;
-            return `<div title="${div.innerText.replace(/"/g, '&quot;')}">${truncated}</div>`;
-        },
+      title: "Query Details",
+      data: "query_details",
+      orderable: false,
+      render: function (data, type, row) {
+        const fullHTML = data || "";
+
+        // Trim the HTML string (not plain text), safe up to 100 characters
+        const shortHTML =
+          fullHTML.length > 100 ? fullHTML.substring(0, 100) + "..." : fullHTML;
+
+        return `
+      <div class="query-details-cell tippy-html" 
+           data-tippy-content='${fullHTML.replace(
+             /'/g,
+             "&apos;"
+           )}' data-theme="custom">
+        ${shortHTML}
+      </div>
+    `;
+      },
     },
     {
-        title: 'Added On',
-        data: 'added_on',
-        orderable: true,
-        render: function (data) {
-            const date = new Date(data);
-            return isNaN(date.getTime()) ? 'N/A' : formatDate(date);
-        },
+      title: "Added On",
+      data: "added_on",
+      orderable: false,
+      render: function (data) {
+        const date = new Date(data);
+        return isNaN(date.getTime()) ? "N/A" : formatDate(date);
+      },
     },
     {
-        title: 'Status',
-        data: 'is_assigned',
-        orderable: true,
-        render: function (data) {
-            if (data === 1) {
-                return `<span class="badge bg-success">Assigned</span>`;
-            } else {
-                return `<span class="badge bg-danger">Not Assigned</span>`;
-            }
-        },
+      title: "Status",
+      data: "is_assigned",
+      orderable: false,
+      render: function (data) {
+        if (data === 1) {
+          return `<span class="badge bg-success">Assigned</span>`;
+        } else {
+          return `<span class="badge bg-danger">Not Assigned</span>`;
+        }
+      },
     },
     {
-        title: 'Assigned On',
-        data: 'assigned_on',
-        orderable: false,
-        render: function (data) {
-           
-            return data ?  formatDate(data):"N/A";
-        },
+      title: "Assigned On",
+      data: "assigned_on",
+      orderable: false,
+      render: function (data) {
+        return data ? formatDate(data) : "N/A";
+      },
     },
     {
-        title: 'Ref ID',
-        data: 'ref_id',
-        orderable: false,
-        render: (data) => data || 'N/A',
+      title: "Ref ID",
+      data: "ref_id",
+      orderable: false,
+      render: (data) => data || "N/A",
     },
     {
-        title: 'Actions',
-        data: null,
-        orderable: false,
-        render: function (data, type, row) {
-            if (row.is_assigned === 1) {
-                return `<span class="text-muted">Already Assigned</span>`;
-            } else {
-                const encodedId = btoa(row.id.toString());
-                return `
-                    <a 
-                        href="https://instacrm.rapidcollaborate.com/workspace/addworkspace?direct_id=${encodedId}" 
-                        target="_blank" 
-                        rel="noopener noreferrer" 
-                        class="btn btn-sm btn-success"
-                    >
-                        Assign
-                    </a>
-                `;
-            }
-        },
+      title: "Actions",
+      data: null,
+      orderable: false,
+      render: function (data, type, row) {
+        if (row.is_assigned === 1) {
+          return `<span class="text-muted">Already Assigned</span>`;
+        } else {
+          const encodedId = btoa(row.id.toString());
+          return `
+            <a 
+              href="https://instacrm.rapidcollaborate.com/workspace/addworkspace?direct_id=${encodedId}" 
+              target="_blank" 
+              rel="noopener noreferrer" 
+              class="btn btn-sm btn-success"
+            >
+              Assign
+            </a>
+          `;
+        }
+      },
     },
-];
-
+  ];
 
   return permissionDenied ? (
     <div className="container text-center py-5">
       <h2 className="mb-4">Permission Not Allowed </h2>
-      <p className="text-muted">You dont have access to this page</p>
+      <p className="text-muted">You don’t have access to this page.</p>
     </div>
   ) : (
     <div className="container py-4">
@@ -273,7 +250,7 @@ function truncateHTML(html, limit) {
                 selectsRange
                 startDate={startDate}
                 endDate={endDate}
-                maxDate={new Date()} // Optional: restrict to today or earlier
+                maxDate={new Date()}
               />
             </div>
           </div>
@@ -291,7 +268,7 @@ function truncateHTML(html, limit) {
             </select>
           </div>
           <div className="col-md-3">
-            <label className="form-label ">Keyword</label>
+            <label className="form-label">Keyword</label>
             <input
               type="text"
               name="keyword"
@@ -326,28 +303,17 @@ function truncateHTML(html, limit) {
               </div>
             </div>
           ) : (
-            // <DataTable
-            //   columns={columns}
-            //   data={queries}
-            //   pagination
-            //   highlightOnHover
-            //   striped
-            //   responsive
-            //   noDataComponent="No queries found."
-            // />
-
             <DataTable
-                                data={queries}
-                                columns={columns}
+              data={queries}
+              columns={columns}
+              className="table table-striped  table-hover"
 
-                                options={{
-                                    pageLength: 25,
-                                    ordering: true,
-                                    // createdRow: (row, data) => {
-                                    //     $(row).find('.view-btn').on('click', () => handleViewButtonClick(data));
-                                    // },
-                                }}
-                            />
+              options={{
+                pageLength: 25,
+                ordering: true,
+                order: [],
+              }}
+            />
           )}
         </div>
       </div>
