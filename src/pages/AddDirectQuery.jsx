@@ -171,93 +171,110 @@ const handleChangeCode=async ()=>{
 
   };
 
-  return (
-    <>
+ return (
+    <div className="container mt-5">
+      {/* Security Code Modal */}
       {showModal && !isAuthenticated && (
-        <div style={modalStyle}>
-          <div style={modalContentStyle}>
-            <h4>Enter 4-digit Security Code</h4>
-            <input
-              type="password"
-              maxLength="4"
-              value={code}
-              onChange={(e) => setCode(e.target.value)}
-              style={{ padding: "10px", fontSize: "16px", width: "100px" }}
-            />
-            <br />
-            <button 
-            className="btn btn-primary btn-sm"
-            disabled={loading}
-            onClick={handleCodeSubmit} style={{ marginTop: "10px" }}>
-              {loading ? "Verifying..." : "Verify Code"}
-            </button>
-            { !loading && (
-             <button className="btn btn-primary btn-sm" onClick={handleChangeCodeModel}>Change Code
-           
-           
-            </button>)}
+        <div className="modal d-block" tabIndex="-1">
+          <div className="modal-dialog modal-dialog-centered">
+            <div className="modal-content p-4">
+              <h5 className="modal-title mb-3">Enter 4-digit Security Code</h5>
+              <input
+                type="password"
+                className="form-control text-center mb-3"
+                maxLength="4"
+                value={code}
+                onChange={(e) => setCode(e.target.value)}
+              />
+              <div className="d-flex justify-content-between">
+                <button
+                  className="btn btn-primary"
+                  onClick={handleCodeSubmit}
+                  disabled={loading}
+                >
+                  {loading ? "Verifying..." : "Verify Code"}
+                </button>
+                   { !loading && (
+                <button className="btn btn-secondary" onClick={handleChangeCodeModel} disabled={loading}>
+                  Change Code
+                </button>
+                   )}
+              </div>
+            </div>
           </div>
         </div>
       )}
-      {changeCodeModal && (
-        <div style={modalStyle}>
-          <div style={modalContentStyle}>
-            <h4>Change Webcode</h4>
-            <input
-              type="email"
-          
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              style={{ padding: "10px", fontSize: "16px", width: "100px" }}
-            />
-            <br />
-            { !verifyEmail && (
-            <button className="btn btn-primary btn-sm"
-            disabled={loading}
-            onClick={handleVerifyEmail} style={{ marginTop: "10px" }}>
-              {loading ? "Verifying..." : "Verify Email"}
-            </button>)}
-            {verifyEmail && (
-                <>
-                <input
-              type="text"
-                maxLength="4"
-              value={code}
-              onChange={(e) => setCode(e.target.value)}
-              style={{ padding: "10px", fontSize: "16px", width: "100px" }}
-            />
-            <button 
-            disabled={loading}
-            onClick={handleChangeCode} style={{ marginTop: "10px" }}>
-              {loading ? "Changing..." : "Change Code"}
-            </button>
-            </>
-            )}
-             
-          </div>
-        </div>    
-    )}
 
+      {/* Change Code Modal */}
+      {changeCodeModal && (
+        <div className="modal d-block" tabIndex="-1">
+          <div className="modal-dialog modal-dialog-centered">
+            <div className="modal-content p-4">
+              <h5 className="modal-title mb-3">Change Web Code</h5>
+              <input
+                type="email"
+                className="form-control mb-3"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="Enter your email"
+              />
+              {!verifyEmail && (
+                <button
+                  className="btn btn-primary w-100"
+                  onClick={handleVerifyEmail}
+                  disabled={loading}
+                >
+                  {loading ? "Verifying..." : "Verify Email"}
+                </button>
+              )}
+              {verifyEmail && (
+                <>
+                  <input
+                    type="text"
+                    maxLength="4"
+                    className="form-control mt-3 text-center"
+                    value={code}
+                    onChange={(e) => setCode(e.target.value)}
+                    placeholder="Enter 4-digit code"
+                  />
+                  <button
+                    className="btn btn-success w-100 mt-3"
+                    onClick={handleChangeCode}
+                    disabled={loading}
+                  >
+                    {loading ? "Changing..." : "Change Code"}
+                  </button>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Main Authenticated Content */}
       {isAuthenticated && (
-        <div style={{ padding: "20px" }}>
-          <h2>Add Direct Query</h2>
-          <form >
-            <textarea
-              rows="6"
-              cols="50"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="Enter your query here..."
-              required
-            />
-            <br />
-            <button type="submit" disabled={loading} style={{ marginTop: "10px" }} onClick={handleQuerySubmit}> 
-              Submit
+        <div>
+          <h3>Add Direct Query</h3>
+          <form onSubmit={handleQuerySubmit}>
+            <div className="mb-3">
+              <textarea
+                className="form-control"
+                rows="6"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="Enter your query here..."
+                required
+              ></textarea>
+            </div>
+            <div className="text-end">
+            <button className="btn btn-warning" disabled={loading}>
+              {loading ? "Submitting..." : "Submit"}
             </button>
+            </div>
           </form>
         </div>
       )}
-    </>
+    </div>
   );
 };
 

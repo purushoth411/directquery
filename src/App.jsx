@@ -18,7 +18,7 @@ import PrivateRoute from "./utils/PrivateRoute.jsx";
 function AutoLoginWrapper({ children }) {
   const location = useLocation();
   const navigate = useNavigate();
-  const { login } = useAuth();
+  const { login, setUserFetched,setPermissionDenied } = useAuth();
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);
@@ -35,6 +35,12 @@ function AutoLoginWrapper({ children }) {
         .then((data) => {
           if (data.status && data.data) {
             login(data.data);
+            setUserFetched(true);
+            if(data.data.user_type=="admin" || data.data.user_type=="Data Manager"){
+              setPermissionDenied(false);
+            }else{
+              setPermissionDenied(true);
+            }
             // Redirect to home after login
             navigate("/", { replace: true, state: { from: location } });
           } else {

@@ -15,5 +15,5 @@ export default function PrivateRoute() {
   if (uname) return <Outlet />;
 
   // Regular auth check
-  return user ? <Outlet /> : <Navigate to="/login" />;
+  return user ? <Outlet /> : <p className="text-center p-10">Invalid Route</p>;
 }
