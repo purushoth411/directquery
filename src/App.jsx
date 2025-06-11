@@ -7,6 +7,7 @@ import {
   useLocation,
 } from "react-router-dom";
 import AddDirectQuery from "./pages/AddDirectQuery";
+
 import "./App.css";
 import { Toaster } from "react-hot-toast";
 import Layout from "./layouts/Layout";
@@ -14,11 +15,12 @@ import DirectQueryList from "./pages/DirectQueryList";
 import { AuthProvider } from "./utils/idb.jsx";
 import { useAuth } from "./utils/idb.jsx";
 import PrivateRoute from "./utils/PrivateRoute.jsx";
+import {ModalProvider} from './utils/ModalContext';
 
 function AutoLoginWrapper({ children }) {
   const location = useLocation();
   const navigate = useNavigate();
-  const { login, setUserFetched,setPermissionDenied } = useAuth();
+  const { user, login, setUserFetched,setPermissionDenied } = useAuth();
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);
@@ -53,7 +55,7 @@ function AutoLoginWrapper({ children }) {
           navigate("/", { state: { error: err.message } });
         });
     }
-  }, [location.search, login, navigate]);
+  }, [location.search, login, navigate, user]);
 
   return children;
 }
@@ -61,7 +63,8 @@ function AutoLoginWrapper({ children }) {
 function App() {
   return (
     <AuthProvider>
-      <Router>
+      <ModalProvider>
+      <Router basename="/dq">
         <AutoLoginWrapper>
           <Routes>
 
@@ -71,11 +74,13 @@ function App() {
 
             <Route element={<Layout />}>
               <Route path="/addquery" element={<AddDirectQuery />} />
+             
             </Route>
           </Routes>
         </AutoLoginWrapper>
       </Router>
       <Toaster />
+      </ModalProvider>
     </AuthProvider>
   );
 }

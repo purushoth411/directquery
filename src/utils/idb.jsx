@@ -7,7 +7,8 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [userFetched, setUserFetched] = useState(false);
-  const [permissionDenied,setPermissionDenied] = useState(true);
+  const [permissionDenied,setPermissionDenied] = useState(false);
+  const [showModal, setShowModal] = useState(false);
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -47,7 +48,7 @@ export const AuthProvider = ({ children }) => {
   
 
   return (
-    <AuthContext.Provider value={{ user, login, logout, loading,setFavourites,userFetched, setUserFetched ,permissionDenied,setPermissionDenied}}>
+    <AuthContext.Provider value={{ user, login, logout, loading,setFavourites,userFetched, setUserFetched ,permissionDenied,setPermissionDenied, showModal, setShowModal}}>
       {children}
     </AuthContext.Provider>
   );
