@@ -16,7 +16,7 @@ export default function Header() {
      isAuthenticated && (
     <header className="bg-white text-dark shadow-sm">
       <div className="container-fluid d-flex align-items-center justify-content-between px-4 py-2">
-        <h1 className="h2 mb-0 fw-bold d-flex align-items-center" style={{ cursor: "pointer" }}>
+        <h1 className="fs-2 mb-0 fw-bold d-flex align-items-center" style={{ cursor: "pointer" }}>
           <span role="img" aria-label="plate">
             InstaCrm - DirectQuery
           </span>
@@ -26,7 +26,7 @@ export default function Header() {
           setChangeCodeModal(true);
           setNoBack(true);
         }}
-          className="btn btn-secondary btn-sm" >
+          className="btn btn-secondary btn-sm n-btn" >
                   Change Code
                 </button>
       </div>

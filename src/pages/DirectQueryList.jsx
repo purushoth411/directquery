@@ -196,7 +196,7 @@ const DirectQueryList = () => {
               href="https://instacrm.rapidcollaborate.com/workspace/addworkspace?direct_id=${encodedId}" 
               target="_blank" 
               rel="noopener noreferrer" 
-              class="btn btn-sm btn-success"
+              class="btn btn-sm n-btn btn-success"
             >
               Assign
             </a>
@@ -212,17 +212,18 @@ const DirectQueryList = () => {
       <p className="text-muted">You don’t have access to this page.</p>
     </div>
   ) : (
-    <div className="container py-4">
-      <h2 className="mb-4">Direct Queries</h2>
+    <div className="py-3 px-5 f-13 f-source bg-sec">
+      <div className="d-flex justify-content-between align-items-center mb-4 ">
+      <h2 className="fs-5 mb-0">Direct Queries</h2>
 
       {/* Filter Form */}
-      <form onSubmit={handleFilterSubmit} className="mb-4">
-        <div className="row g-3 align-items-end">
-          <div className="col-md-3">
-            <label className="form-label">Date Range</label>
+      <form onSubmit={handleFilterSubmit} className="">
+        <div className="d-flex gap-2 align-items-end justify-content-end">
+          <div className="">
+            {/* <label className="form-label">Date Range</label> */}
             <div>
               <DatePicker
-                className="form-control form-control-sm"
+                className="form-control form-control-sm f-13"
                 selected={startDate}
                 onChange={(dates) => {
                   const [start, end] = dates;
@@ -254,48 +255,53 @@ const DirectQueryList = () => {
               />
             </div>
           </div>
-          <div className="col-md-3">
-            <label className="form-label">Status</label>
+          <div className="">
+            {/* <label className="form-label">Status</label> */}
             <select
               name="status"
               value={filters.status}
               onChange={handleFilterChange}
-              className="form-select form-select-sm"
+              className="form-select form-select-sm f-13"
             >
-              <option value="">All</option>
+              <option value="">Status All</option>
               <option value="1">Assigned</option>
               <option value="2">Not Assigned</option>
             </select>
           </div>
-          <div className="col-md-3">
-            <label className="form-label">Keyword</label>
+          <div className="">
+            {/* <label className="form-label">Keyword</label> */}
             <input
               type="text"
               name="keyword"
               value={filters.keyword}
               onChange={handleFilterChange}
               placeholder="Search by keyword"
-              className="form-control form-control-sm"
+              className="form-control form-control-sm f-13"
             />
           </div>
-          <div className="col-md-3 d-flex gap-2">
-            <button type="submit" className="btn btn-sm btn-primary w-100">
-              Apply Filters <Funnel size={17} />
-            </button>
-            <button
-              type="button"
-              onClick={handleRefresh}
-              className="btn btn-sm"
-            >
-              <RefreshCcw size={17} />
-            </button>
-          </div>
+          {/* <div className="col-md-3 d-flex gap-2"> */}
+            <div>
+              <button
+                type="button"
+                onClick={handleRefresh}
+                className="btn btn-sm n-btn btn-outline-dark"
+              >
+                <RefreshCcw size={11} />
+              </button>
+            </div>
+            <div>
+              <button type="submit" className="btn btn-sm n-btn btn-warning text-white w-100">
+                Apply Filters <Funnel size={12} />
+              </button>
+            </div>
+            
+          {/* </div> */}
         </div>
       </form>
-
+      </div>
       {/* Data Table */}
-      <div className="card shadow-sm">
-        <div className="card-body">
+      <div className="sec-border-top">
+        <div className="">
           {loading ? (
             <div className="text-center py-5">
               <div className="spinner-border text-primary" role="status">

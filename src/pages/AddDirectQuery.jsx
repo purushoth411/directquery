@@ -72,8 +72,8 @@ const AddDirectQuery = () => {
 
       {/* Main Authenticated Content */}
       {isAuthenticated && (
-        <div>
-          <h3>Add Direct Query</h3>
+        <div className="bg-white p-3 rounded shadow">
+          <h3 className="fs-4">Add Direct Query</h3>
           <form>
             <div className="mb-3">
               <ReactQuill
@@ -86,7 +86,7 @@ const AddDirectQuery = () => {
               <button
                 type="button"
                 onClick={handleQuerySubmit}
-                className="btn btn-warning"
+                className="btn btn-warning btn-sm n-btn"
                 disabled={loading}
               >
                 {loading ? "Submitting..." : "Submit"}

@@ -1,10 +1,76 @@
 #root {
   width: 100%;
 }
+.bg-sec{
+  background: #ecf0f5;
+}
+.f-source {
+  font-family: "Source Sans 3", sans-serif;
+}
+
 .ql-container{
   min-height: 150px;
 }
 
 .tippy-content {
   background-color: whitesmoke;
+}
+
+.react-datepicker-wrapper {
+    width: 100%;
+}
+
+.f-12{
+  font-size: 12px;
+}
+.f-13{
+  font-size: 13px;
+}
+
+.n-btn{
+  padding: 2px 7px;
+  font-size: 12px;
+}
+
+.btn-warning{
+  background-color: #f39c12;
+}
+
+.sec-border-top{
+  border-top: 3px solid #3c8dbc;
+  box-shadow: 0 0 14px #ccc;
+  background: #fff;
+  border-radius: 5px;
+  padding: 0px 10px 10px;
+}
+.query-details-cell p {
+    margin-bottom: 5px;
+}
+.tippy-content p {
+    margin-bottom: 5px;
+    word-wrap: break-word;
+    font-size: 13px;
+}
+.query-details-cell br {
+    display: none;
+}
+div.dt-container select.dt-input {
+    padding: 2px 4px !important;
+}
+div.dt-container .dt-search input{
+  padding: 2px 4px !important;
+}
+div.dt-container .dt-paging .dt-paging-button{
+  padding: 0px 10px !important;
+}
+
+.modal.d-block {
+    background: #000000d6;
+}
+.word-break-nowrap {
+    white-space: nowrap;
+}
+
+.n-close-btn{
+  padding: 0px 5px;
 }

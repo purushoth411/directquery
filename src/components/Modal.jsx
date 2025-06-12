@@ -128,23 +128,36 @@ const Modal = ({ showModal, setShowModal, setIsAuthenticated, loading, setLoadin
       {showModal && (
         <div className="modal d-block" tabIndex="-1">
           <div className="modal-dialog modal-dialog-centered">
-            <div className="modal-content p-4">
-              <h5 className="modal-title mb-3">Enter 4-digit Security Code</h5>
-              <input
-                type="password"
-                className="form-control text-center mb-3"
-                maxLength="4"
-                value={code}
-                onChange={(e) => setCode(e.target.value)}
-              />
-              <div className="d-flex justify-content-between">
-                <button className="btn btn-primary" onClick={handleCodeSubmit} disabled={loading}>
-                  {loading ? "Verifying..." : "Verify Code"}
-                </button>
-                {!loading && (
-                  <button className="btn btn-secondary" onClick={handleChangeCodeModel}>
-                    Change Code
+            <div className="modal-content p-3">
+              <div className="d-flex justify-content-between align-items-center mb-3">
+                <h5 className="modal-title mb-0 fs-6">Security Code</h5>
+                
+              </div>
+              <div className="d-flex gap-2 align-items-end">
+                <div className="w-100">
+                  <label className="mb-1">Enter 4-digit Security Code</label>
+                  <input
+                    type="password"
+                    className="form-control form-control-sm f-13"
+                    maxLength="4"
+                    value={code}
+                    onChange={(e) => setCode(e.target.value)}
+                  />
+                </div>
+                {/* <div className="d-flex justify-content-between"> */}
+                  <div>
+                    <button className="btn btn-success btn-sm word-break-nowrap n-btn" onClick={handleCodeSubmit} disabled={loading}>
+                    {loading ? "Verifying..." : "Verify Code"}
                   </button>
+                  </div>
+                  
+                {/* </div> */}
+              </div>
+              <div className="mt-3">
+                {!loading && (
+                  <a className="btn btn-sm btn-danger n-btn word-break-nowrap cursor-pointer" onClick={handleChangeCodeModel}>
+                    Change Code
+                  </a>
                 )}
               </div>
             </div>
@@ -156,37 +169,50 @@ const Modal = ({ showModal, setShowModal, setIsAuthenticated, loading, setLoadin
       {changeCodeModal && (
         <div className="modal d-block" tabIndex="-1">
           <div className="modal-dialog modal-dialog-centered">
-            <div className="modal-content p-4">
-              <h5 className="modal-title mb-3 d-flex justify-content-between">Change Web Code  
-                
-             <X sixe={17} onClick={handleClose} style={{cursor:"pointer"}}/>
-            
-            </h5>
-              <input
-                type="email"
-                className="form-control mb-3"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="Enter your email"
-              />
-              {!verifyEmail && (
-                <button className="btn btn-primary w-100" onClick={handleVerifyEmail} disabled={loading}>
-                  {loading ? "Verifying..." : "Verify Email"}
+            <div className="modal-content p-3">
+              <h5 className="modal-title mb-3 d-flex justify-content-between align-items-center fs-6">
+                Change Web Code  
+                <button className="btn btn-danger n-close-btn btn-sm" onClick={handleClose}>
+                  <X size={12}  />
                 </button>
-              )}
+              </h5>
+              <div className="d-flex gap-2">
+                <div className="w-100">
+                  <label className="mb-1">Enter 4-digit code</label>
+                  <input
+                    type="email"
+                    className="form-control form-control-sm f-13"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="Enter your email"
+                  />
+                </div>
+                {!verifyEmail && (
+                   <button className="btn btn-success btn-sm n-btn word-break-nowrap " onClick={handleVerifyEmail} disabled={loading}>
+                    {loading ? "Verifying..." : "Verify Email"}
+                  </button>
+                )}
+              </div>
               {verifyEmail && (
                 <>
-                  <input
-                    type="text"
-                    maxLength="4"
-                    className="form-control mt-3 text-center"
-                    value={code}
-                    onChange={(e) => setCode(e.target.value)}
-                    placeholder="Enter 4-digit code"
-                  />
-                  <button className="btn btn-success w-100 mt-3" onClick={handleChangeCode} disabled={loading}>
-                    {loading ? "Changing..." : "Change Code"}
-                  </button>
+                  <div className="gap-3">
+                    <div className=" mt-3">
+                      <label className="mb-1">Enter 4-digit code</label>
+                      <input
+                        type="text"
+                        maxLength="4"
+                        className="form-control form-control-sm f-13"
+                        value={code}
+                        onChange={(e) => setCode(e.target.value)}
+                        placeholder="Enter 4-digit code"
+                      />
+                    </div>
+                    <div className="text-end">
+                      <button className="btn btn-success btn-sm n-btn mt-3" onClick={handleChangeCode} disabled={loading}>
+                        {loading ? "Changing..." : "Change Code"}
+                      </button>
+                    </div>
+                  </div>
                 </>
               )}
             </div>
