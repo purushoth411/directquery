@@ -4,6 +4,7 @@ import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
 import Modal from "../components/Modal";
 import { useModal } from "../utils/ModalContext";
+import { getSocket } from '../Socket';
 
 const VALID_HOURS = 4;
 
@@ -14,6 +15,7 @@ const AddDirectQuery = () => {
 
   const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(false);
+  const socket = getSocket();
 
   useEffect(() => {
     const access = sessionStorage.getItem(STORAGE_KEY);
@@ -46,6 +48,7 @@ const AddDirectQuery = () => {
       const data = await response.json();
       if (data.status) {
         toast.success("Query added successfully!");
+        socket.emit("newRequest", {query})
         setQuery("");
       } else {
         toast.error(data.message || "Failed to add query. Please try again.");
@@ -58,6 +61,10 @@ const AddDirectQuery = () => {
       setLoading(false);
     }
   };
+
+  const handleEmit = () => {
+    socket.emit("newRequest", {query})
+  }
 
   return (
     <div className="container mt-5">

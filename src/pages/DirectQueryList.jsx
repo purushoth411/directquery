@@ -7,11 +7,14 @@ import DT from "datatables.net-dt";
 import $ from "jquery";
 import tippy from "tippy.js";
 import "tippy.js/dist/tippy.css";
+import { getSocket } from "../Socket";
+import dayjs from 'dayjs';
 
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 
 const DirectQueryList = () => {
+  const socket = getSocket();
   const [queries, setQueries] = useState([]);
   const [loading, setLoading] = useState(false);
   const [startDate, setStartDate] = useState(null);
@@ -32,6 +35,33 @@ const DirectQueryList = () => {
       fetchQueries(false);
     }
   }, [user]);
+
+  useEffect(() => {
+    socket.on("newRequestCreated", (data) => {
+      toast("New Query Added", {
+        icon: "💬",
+      });
+      console.log(data);
+      const newQuery = {
+      added_by: 1,
+      added_on: dayjs().format('YYYY-MM-DD HH:mm:ss'), // Or use new Date().toISOString()
+      assigned_by: null,
+      assigned_on: null,
+      assigned_to: 0,
+      id: Date.now(), // temp id if needed
+      is_assigned: 2,
+      profile_id: 0,
+      query_details: data.query,
+      ref_id: null
+    };
+
+    setQueries((prev) => [newQuery, ...prev]);
+    });
+
+    return () => {
+      socket.off("newRequestCreated"); // Clean up on component unmount
+    };
+  }, []);
 
   useEffect(() => {
     // Apply tippy after queries are rendered
@@ -214,122 +244,121 @@ const DirectQueryList = () => {
   ) : (
     <div className="f-13 f-source bg-sec">
       <div className="py-3 px-5 ">
-      <div className="d-flex justify-content-between align-items-center mb-4 ">
-      <h2 className="fs-5 mb-0">Direct Queries</h2>
+        <div className="d-flex justify-content-between align-items-center mb-4 ">
+          <h2 className="fs-5 mb-0">Direct Queries</h2>
 
-      {/* Filter Form */}
-      <form onSubmit={handleFilterSubmit} className="">
-        <div className="d-flex gap-2 align-items-center justify-content-end">
-          <div className="">
-            {/* <label className="form-label">Date Range</label> */}
-            <div>
-              <DatePicker
-                className="form-control form-control-sm f-13"
-                selected={startDate}
-                onChange={(dates) => {
-                  const [start, end] = dates;
-                  setStartDate(start);
-                  setEndDate(end);
+          {/* Filter Form */}
+          <form onSubmit={handleFilterSubmit} className="">
+            <div className="d-flex gap-2 align-items-center justify-content-end">
+              <div className="">
+                {/* <label className="form-label">Date Range</label> */}
+                <div>
+                  <DatePicker
+                    className="form-control form-control-sm f-13"
+                    selected={startDate}
+                    onChange={(dates) => {
+                      const [start, end] = dates;
+                      setStartDate(start);
+                      setEndDate(end);
 
-                  const oneDayInMs = 24 * 60 * 60 * 1000;
+                      const oneDayInMs = 24 * 60 * 60 * 1000;
 
-                  setFilters((prev) => ({
-                    ...prev,
-                    startDate: start
-                      ? new Date(start.getTime() + oneDayInMs)
-                          .toISOString()
-                          .split("T")[0]
-                      : "",
-                    endDate: end
-                      ? new Date(end.getTime() + oneDayInMs)
-                          .toISOString()
-                          .split("T")[0]
-                      : "",
-                  }));
-                }}
-                placeholderText="Select Date Range"
-                dateFormat="yyyy/MM/dd"
-                selectsRange
-                startDate={startDate}
-                endDate={endDate}
-                maxDate={new Date()}
-              />
-            </div>
-          </div>
-          <div className="">
-            {/* <label className="form-label">Status</label> */}
-            <select
-              name="status"
-              value={filters.status}
-              onChange={handleFilterChange}
-              className="form-select form-select-sm f-13"
-            >
-              <option value="">Status All</option>
-              <option value="1">Assigned</option>
-              <option value="2">Not Assigned</option>
-            </select>
-          </div>
-          <div className="">
-            {/* <label className="form-label">Keyword</label> */}
-            <input
-              type="text"
-              name="keyword"
-              value={filters.keyword}
-              onChange={handleFilterChange}
-              placeholder="Search by keyword"
-              className="form-control form-control-sm f-13"
-            />
-          </div>
-          {/* <div className="col-md-3 d-flex gap-2"> */}
-            <div>
-              <button
-                type="button"
-                onClick={handleRefresh}
-                className="btn btn-sm n-btn btn-outline-dark"
-              >
-                <RefreshCcw size={11} />
-              </button>
-            </div>
-            <div>
-              <button type="submit" className="btn btn-sm n-btn btn-warning text-white w-100">
-                Apply Filters <Funnel size={12} />
-              </button>
-            </div>
-            
-          {/* </div> */}
-        </div>
-      </form>
-      </div>
-      {/* Data Table */}
-      <div className="sec-border-top">
-        <div className="">
-          {loading ? (
-            <div className="text-center py-5">
-              <div className="spinner-border text-primary" role="status">
-                <span className="visually-hidden">Loading...</span>
+                      setFilters((prev) => ({
+                        ...prev,
+                        startDate: start
+                          ? new Date(start.getTime() + oneDayInMs)
+                              .toISOString()
+                              .split("T")[0]
+                          : "",
+                        endDate: end
+                          ? new Date(end.getTime() + oneDayInMs)
+                              .toISOString()
+                              .split("T")[0]
+                          : "",
+                      }));
+                    }}
+                    placeholderText="Select Date Range"
+                    dateFormat="yyyy/MM/dd"
+                    selectsRange
+                    startDate={startDate}
+                    endDate={endDate}
+                    maxDate={new Date()}
+                  />
+                </div>
               </div>
-            </div>
-          ) : (
-            <DataTable
-              data={queries}
-              columns={columns}
-              className="table table-striped  table-hover"
+              <div className="">
+                {/* <label className="form-label">Status</label> */}
+                <select
+                  name="status"
+                  value={filters.status}
+                  onChange={handleFilterChange}
+                  className="form-select form-select-sm f-13"
+                >
+                  <option value="">Status All</option>
+                  <option value="1">Assigned</option>
+                  <option value="2">Not Assigned</option>
+                </select>
+              </div>
+              <div className="">
+                {/* <label className="form-label">Keyword</label> */}
+                <input
+                  type="text"
+                  name="keyword"
+                  value={filters.keyword}
+                  onChange={handleFilterChange}
+                  placeholder="Search by keyword"
+                  className="form-control form-control-sm f-13"
+                />
+              </div>
+              {/* <div className="col-md-3 d-flex gap-2"> */}
+              <div>
+                <button
+                  type="button"
+                  onClick={handleRefresh}
+                  className="btn btn-sm n-btn btn-outline-dark"
+                >
+                  <RefreshCcw size={11} />
+                </button>
+              </div>
+              <div>
+                <button
+                  type="submit"
+                  className="btn btn-sm n-btn btn-warning text-white w-100"
+                >
+                  Apply Filters <Funnel size={12} />
+                </button>
+              </div>
 
-              options={{
-                pageLength: 25,
-                ordering: true,
-                order: [],
-              }}
-            />
-          )}
+              {/* </div> */}
+            </div>
+          </form>
+        </div>
+        {/* Data Table */}
+        <div className="sec-border-top">
+          <div className="">
+            {loading ? (
+              <div className="text-center py-5">
+                <div className="spinner-border text-primary" role="status">
+                  <span className="visually-hidden">Loading...</span>
+                </div>
+              </div>
+            ) : (
+              <DataTable
+                data={queries}
+                columns={columns}
+                className="table table-striped  table-hover"
+                options={{
+                  pageLength: 25,
+                  ordering: true,
+                  order: [],
+                }}
+              />
+            )}
+          </div>
         </div>
       </div>
-      </div>
-      <div className="main-footer">
-        Powered by EMarketz India Pvt Ltd
-      </div>
+      <div className="main-footer">Powered by EMarketz India Pvt Ltd</div>
     </div>
-    
   );
 };
 
