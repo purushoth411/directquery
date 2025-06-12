@@ -74,3 +74,12 @@ div.dt-container .dt-paging .dt-paging-button{
 .n-close-btn{
   padding: 0px 5px;
 }
+
+.main-footer {
+    text-align: center;
+    color: #777;
+    font-size: 14px;
+    background: #efefef;
+    padding: 15px;
+    border-top: 1px solid #d2d6de;
+}

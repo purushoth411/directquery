@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import toast from "react-hot-toast";
 import { X } from "lucide-react";
 import { useModal } from "../utils/ModalContext";
@@ -6,13 +6,33 @@ import { useModal } from "../utils/ModalContext";
 
 const Modal = ({ showModal, setShowModal, setIsAuthenticated, loading, setLoading, STORAGE_KEY }) => {
   const {changeCodeModal, setChangeCodeModal, noBack, setNoBack} = useModal();
-  const [code, setCode] = useState("");
+  const [code, setCode] = useState(["", "", "", ""]);
   const [email, setEmail] = useState("");
   const [verifyEmail, setVerifyEmail] = useState(false);
 
+  const inputs = useRef([]);
+
+  const handleChange = (value, index) => {
+    if (!/^[0-9]?$/.test(value)) return; // Only allow digits or empty
+
+    const newCode = [...code];
+    newCode[index] = value;
+    setCode(newCode);
+
+    if (value && index < 3) {
+      inputs.current[index + 1].focus();
+    }
+  };
+
+  const handleKeyDown = (e, index) => {
+    if (e.key === "Backspace" && !code[index] && index > 0) {
+      inputs.current[index - 1].focus();
+    }
+  };
+
   const handleChangeCodeModel = () => {
     setShowModal(false);
-    setCode("");
+    setCode(["", "", "", ""]);
     setChangeCodeModal(true);
   };
 
@@ -58,12 +78,12 @@ const Modal = ({ showModal, setShowModal, setIsAuthenticated, loading, setLoadin
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ email, code }),
+        body: JSON.stringify({ email, code : code.join("") }),
       });
       const data = await response.json();
       if (data.status) {
         setChangeCodeModal(false);
-        setCode("");
+        setCode(["", "", "", ""]);
         setEmail("");
         if (!sessionStorage.getItem(STORAGE_KEY)) {
           setShowModal(true);
@@ -82,6 +102,10 @@ const Modal = ({ showModal, setShowModal, setIsAuthenticated, loading, setLoadin
 
   const handleCodeSubmit = async () => {
     try {
+      if(code.join("").length != 4){
+        toast.error("pls enter 4 digits");
+        return;
+      }
       setLoading(true);
       if (!code || code.length !== 4) {
         toast.error("Please enter a valid 4-digit code.");
@@ -92,7 +116,7 @@ const Modal = ({ showModal, setShowModal, setIsAuthenticated, loading, setLoadin
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ code }),
+        body: JSON.stringify({ code:code.join("") }),
       });
       const data = await response.json();
       if (data.status) {
@@ -126,8 +150,8 @@ const Modal = ({ showModal, setShowModal, setIsAuthenticated, loading, setLoadin
     <>
       {/* Security Code Modal */}
       {showModal && (
-        <div className="modal d-block" tabIndex="-1">
-          <div className="modal-dialog modal-dialog-centered">
+        <div className="modal  d-block" tabIndex="-1">
+          <div className="modal-dialog modal-sm modal-dialog-centered">
             <div className="modal-content p-3">
               <div className="d-flex justify-content-between align-items-center mb-3">
                 <h5 className="modal-title mb-0 fs-6">Security Code</h5>
@@ -136,13 +160,22 @@ const Modal = ({ showModal, setShowModal, setIsAuthenticated, loading, setLoadin
               <div className="d-flex gap-2 align-items-end">
                 <div className="w-100">
                   <label className="mb-1">Enter 4-digit Security Code</label>
-                  <input
-                    type="password"
-                    className="form-control form-control-sm f-13"
-                    maxLength="4"
-                    value={code}
-                    onChange={(e) => setCode(e.target.value)}
-                  />
+                  <div style={{ display: "flex", gap: "8px" }}>
+      {code && code.map((digit, index) => (
+        <input
+          key={index}
+          type="text"
+          inputMode="numeric"
+          maxLength="1"
+          className="form-control form-control-sm f-13 text-center"
+          value={digit}
+          onChange={(e) => handleChange(e.target.value, index)}
+          onKeyDown={(e) => handleKeyDown(e, index)}
+          ref={(el) => (inputs.current[index] = el)}
+          style={{ width: "35px" }}
+        />
+      ))}
+    </div>
                 </div>
                 {/* <div className="d-flex justify-content-between"> */}
                   <div>
@@ -153,9 +186,9 @@ const Modal = ({ showModal, setShowModal, setIsAuthenticated, loading, setLoadin
                   
                 {/* </div> */}
               </div>
-              <div className="mt-3">
+              <div className="mt-2">
                 {!loading && (
-                  <a className="btn btn-sm btn-danger n-btn word-break-nowrap cursor-pointer" onClick={handleChangeCodeModel}>
+                  <a href="javascript:void(0)" className="word-break-nowrap text-danger pointer" onClick={handleChangeCodeModel}>
                     Change Code
                   </a>
                 )}
@@ -167,7 +200,7 @@ const Modal = ({ showModal, setShowModal, setIsAuthenticated, loading, setLoadin
 
       {/* Change Code Modal */}
       {changeCodeModal && (
-        <div className="modal d-block" tabIndex="-1">
+        <div className="modal modal-sm d-block" tabIndex="-1">
           <div className="modal-dialog modal-dialog-centered">
             <div className="modal-content p-3">
               <h5 className="modal-title mb-3 d-flex justify-content-between align-items-center fs-6">
@@ -176,9 +209,9 @@ const Modal = ({ showModal, setShowModal, setIsAuthenticated, loading, setLoadin
                   <X size={12}  />
                 </button>
               </h5>
-              <div className="d-flex gap-2 align-items-end">
+              <div className="d-flex flex-column gap-2 align-items-end">
                 <div className="w-100">
-                  <label className="mb-1">Enter 4-digit code</label>
+                  <label className="mb-1">Enter your email</label>
                   <input
                     type="email"
                     className="form-control form-control-sm f-13"
@@ -197,17 +230,25 @@ const Modal = ({ showModal, setShowModal, setIsAuthenticated, loading, setLoadin
               </div>
               {verifyEmail && (
                 <>
-                  <div className="gap-3">
+                  <div className="gap-3 d-flex align-items-end">
                     <div className=" mt-3">
                       <label className="mb-1">Enter 4-digit code</label>
-                      <input
-                        type="text"
-                        maxLength="4"
-                        className="form-control form-control-sm f-13"
-                        value={code}
-                        onChange={(e) => setCode(e.target.value)}
-                        placeholder="Enter 4-digit code"
-                      />
+                      <div style={{ display: "flex", gap: "8px" }}>
+                        {code.map((digit, index) => (
+                          <input
+                            key={index}
+                            type="text"
+                            inputMode="numeric"
+                            maxLength="1"
+                            className="form-control form-control-sm f-13 text-center"
+                            value={digit}
+                            onChange={(e) => handleChange(e.target.value, index)}
+                            onKeyDown={(e) => handleKeyDown(e, index)}
+                            ref={(el) => (inputs.current[index] = el)}
+                            style={{ width: "35px" }}
+                          />
+                        ))}
+                      </div>
                     </div>
                     <div className="text-end">
                       <button className="btn btn-success btn-sm n-btn mt-3" onClick={handleChangeCode} disabled={loading}>

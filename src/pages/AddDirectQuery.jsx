@@ -73,7 +73,7 @@ const AddDirectQuery = () => {
       {/* Main Authenticated Content */}
       {isAuthenticated && (
         <div className="bg-white p-3 rounded shadow">
-          <h3 className="fs-4">Add Direct Query</h3>
+          <h3 className="fs-5">Add Direct Query</h3>
           <form>
             <div className="mb-3">
               <ReactQuill

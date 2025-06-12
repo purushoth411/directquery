@@ -212,13 +212,14 @@ const DirectQueryList = () => {
       <p className="text-muted">You don’t have access to this page.</p>
     </div>
   ) : (
-    <div className="py-3 px-5 f-13 f-source bg-sec">
+    <div className="f-13 f-source bg-sec">
+      <div className="py-3 px-5 ">
       <div className="d-flex justify-content-between align-items-center mb-4 ">
       <h2 className="fs-5 mb-0">Direct Queries</h2>
 
       {/* Filter Form */}
       <form onSubmit={handleFilterSubmit} className="">
-        <div className="d-flex gap-2 align-items-end justify-content-end">
+        <div className="d-flex gap-2 align-items-center justify-content-end">
           <div className="">
             {/* <label className="form-label">Date Range</label> */}
             <div>
@@ -323,7 +324,12 @@ const DirectQueryList = () => {
           )}
         </div>
       </div>
+      </div>
+      <div className="main-footer">
+        Powered by EMarketz India Pvt Ltd
+      </div>
     </div>
+    
   );
 };
 
