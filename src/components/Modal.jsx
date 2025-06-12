@@ -176,7 +176,7 @@ const Modal = ({ showModal, setShowModal, setIsAuthenticated, loading, setLoadin
                   <X size={12}  />
                 </button>
               </h5>
-              <div className="d-flex gap-2">
+              <div className="d-flex gap-2 align-items-end">
                 <div className="w-100">
                   <label className="mb-1">Enter 4-digit code</label>
                   <input
@@ -188,9 +188,11 @@ const Modal = ({ showModal, setShowModal, setIsAuthenticated, loading, setLoadin
                   />
                 </div>
                 {!verifyEmail && (
-                   <button className="btn btn-success btn-sm n-btn word-break-nowrap " onClick={handleVerifyEmail} disabled={loading}>
+                  <div>
+                     <button className="btn btn-success btn-sm n-btn word-break-nowrap " onClick={handleVerifyEmail} disabled={loading}>
                     {loading ? "Verifying..." : "Verify Email"}
                   </button>
+                  </div>
                 )}
               </div>
               {verifyEmail && (
