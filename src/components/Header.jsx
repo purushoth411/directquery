@@ -31,18 +31,11 @@ export default function Header() {
               className="btn btn-secondary btn-sm n-btn" >
                       Change Code
                     </button>
-            <button className="btn btn-danger btn-sm n-btn"
-              onClick={()=>{
-                setlogOutModal(true);
-                setNoBack(true);
-              }}
-            >
-              <LogOut size={14} />
-            </button>
+            
          </div>
       </div>
     </header>
-    
+
       )
   );
 }
