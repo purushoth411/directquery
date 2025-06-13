@@ -36,7 +36,7 @@ const [filters, setFilters] = useState({
 
   useEffect(() => {
     if (user) {
-      fetchQueries(true);
+      fetchQueries(false);
     }
   }, [user]);
 
