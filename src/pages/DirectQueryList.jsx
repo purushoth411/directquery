@@ -8,7 +8,7 @@ import $ from "jquery";
 import tippy from "tippy.js";
 import "tippy.js/dist/tippy.css";
 import { getSocket } from "../Socket";
-import dayjs from 'dayjs';
+import dayjs from "dayjs";
 
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
@@ -36,32 +36,54 @@ const DirectQueryList = () => {
     }
   }, [user]);
 
-  useEffect(() => {
-    socket.on("newRequestCreated", (data) => {
-      toast("New Query Added", {
-        icon: "💬",
-      });
-      console.log(data);
-      const newQuery = {
+ useEffect(() => {
+  socket.on("newRequestCreated", (data) => {
+    toast("New Query Added", {
+      icon: "💬",
+    });
+
+    const newQuery = {
       added_by: 1,
-      added_on: dayjs().format('YYYY-MM-DD HH:mm:ss'), // Or use new Date().toISOString()
+      added_on: dayjs().format("YYYY-MM-DD HH:mm:ss"),
       assigned_by: null,
       assigned_on: null,
       assigned_to: 0,
-      id: Date.now(), // temp id if needed
+      id: Date.now(), // temporary ID
       is_assigned: 2,
       profile_id: 0,
       query_details: data.query,
-      ref_id: null
+      ref_id: null,
+      directQueryId: data.directQueryId || null // if available
     };
 
     setQueries((prev) => [newQuery, ...prev]);
+  });
+
+  socket.on("newRefAssigned", (data) => {
+    toast("Query Assigned", {
+      icon: "✅",
     });
 
-    return () => {
-      socket.off("newRequestCreated"); // Clean up on component unmount
-    };
-  }, []);
+    // Update the query with matching directQueryId
+    setQueries((prevQueries) =>
+      prevQueries.map((query) =>
+        query.id == data.directQueryId
+          ? {
+              ...query,
+              ref_id: data.ref_id,
+              assigned_on: data.assigned_on,
+              is_assigned: 1
+            }
+          : query
+      )
+    );
+  });
+
+  return () => {
+    socket.off("newRequestCreated");
+    socket.off("newRefAssigned");
+  };
+}, []);
 
   useEffect(() => {
     // Apply tippy after queries are rendered
@@ -125,6 +147,10 @@ const DirectQueryList = () => {
       day: "2-digit",
       month: "short",
       year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+      hour12: true, // use false for 24-hour format
     }).format(date);
   };
 
@@ -186,18 +212,7 @@ const DirectQueryList = () => {
         return isNaN(date.getTime()) ? "N/A" : formatDate(date);
       },
     },
-    {
-      title: "Status",
-      data: "is_assigned",
-      orderable: false,
-      render: function (data) {
-        if (data === 1) {
-          return `<span class="badge bg-success">Assigned</span>`;
-        } else {
-          return `<span class="badge bg-danger">Not Assigned</span>`;
-        }
-      },
-    },
+
     {
       title: "Assigned On",
       data: "assigned_on",
@@ -207,34 +222,63 @@ const DirectQueryList = () => {
       },
     },
     {
-      title: "Ref ID",
-      data: "ref_id",
-      orderable: false,
-      render: (data) => data || "N/A",
-    },
-    {
       title: "Actions",
       data: null,
       orderable: false,
       render: function (data, type, row) {
         if (row.is_assigned === 1) {
-          return `<span class="text-muted">Already Assigned</span>`;
+          const refId = row.ref_id || "N/A";
+          return `
+    <div class="d-flex align-items-center gap-2">
+      <span class="">${refId}</span>
+      <span 
+        class="copy-ref-btn" 
+        data-ref="${refId}"
+       
+        style="cursor: pointer;"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" 
+             width="16" height="16" 
+             viewBox="0 0 24 24" 
+             fill="none" 
+             stroke="currentColor" 
+             stroke-width="2" 
+             stroke-linecap="round" 
+             stroke-linejoin="round" 
+             class="lucide lucide-copy text-primary">
+          <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+          <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+        </svg>
+      </span>
+    </div>
+  `;
         } else {
           const encodedId = btoa(row.id.toString());
           return `
-            <a 
-              href="https://instacrm.rapidcollaborate.com/workspace/addworkspace?direct_id=${encodedId}" 
-              target="_blank" 
-              rel="noopener noreferrer" 
-              class="btn btn-sm n-btn btn-success"
-            >
-              Assign
-            </a>
-          `;
+        <a 
+          href="https://instacrm.rapidcollaborate.com/workspace/addworkspace?direct_id=${encodedId}" 
+          target="" 
+          rel="noopener noreferrer" 
+          class="btn btn-sm n-btn btn-success"
+        >
+          Assign
+        </a>
+      `;
         }
       },
     },
   ];
+
+  const handleCopy = (data) => {
+    navigator.clipboard
+      .writeText(data.ref_id)
+      .then(() => {
+        toast.success("RefId copied to clipboard!");
+      })
+      .catch((err) => {
+        console.error("Failed to copy QuoteID:", err);
+      });
+  };
 
   return permissionDenied ? (
     <div className="container text-center py-5">
@@ -351,6 +395,11 @@ const DirectQueryList = () => {
                   pageLength: 25,
                   ordering: true,
                   order: [],
+                  createdRow: (row, data) => {
+                    $(row)
+                      .find(".copy-ref-btn")
+                      .on("click", () => handleCopy(data));
+                  },
                 }}
               />
             )}

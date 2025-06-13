@@ -12,6 +12,12 @@ const STORAGE_KEY = "direct_query_access";
 const [isAuthenticated, setIsAuthenticated] = useState(
     sessionStorage.getItem(STORAGE_KEY) ? true : false
   );
+   const logout = () => {
+    sessionStorage.removeItem(STORAGE_KEY);
+    setIsAuthenticated(false);
+    setShowModal(true);
+  };
+
   return (
     <ModalContext.Provider value={{
       showModal,
@@ -22,7 +28,8 @@ const [isAuthenticated, setIsAuthenticated] = useState(
       setNoBack,
       isAuthenticated,
       setIsAuthenticated,
-      STORAGE_KEY
+      STORAGE_KEY,
+       logout, 
     }}>
       {children}
     </ModalContext.Provider>

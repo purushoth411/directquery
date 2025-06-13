@@ -12,6 +12,7 @@ export default function Header() {
   const { logOutModal, setlogOutModal } = useModal();
   const { noBack, setNoBack } = useModal();
   const {isAuthenticated, setIsAuthenticated}=useModal();
+  const { logout } = useModal();
 
   return (
      isAuthenticated && (
@@ -23,14 +24,9 @@ export default function Header() {
           </span>
         </h1>
          <div className="d-flex gap-2">
-          <button
-            onClick={()=>{
-              setChangeCodeModal(true);
-              setNoBack(true);
-            }}
-              className="btn btn-secondary btn-sm n-btn" >
-                      Change Code
-                    </button>
+           <button onClick={logout} className="btn btn-danger btn-sm">
+      Exit <LogOut size={14} />
+    </button>
             
          </div>
       </div>
