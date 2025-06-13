@@ -17,14 +17,18 @@ const DirectQueryList = () => {
   const socket = getSocket();
   const [queries, setQueries] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [startDate, setStartDate] = useState(null);
-  const [endDate, setEndDate] = useState(null);
-  const [filters, setFilters] = useState({
-    startDate: "",
-    endDate: "",
-    keyword: "",
-    status: "",
-  });
+  const today = new Date();
+const formattedToday = today.toISOString().split("T")[0];
+const oneDayInMs = 24 * 60 * 60 * 1000;
+
+const [startDate, setStartDate] = useState(today);
+const [endDate, setEndDate] = useState(today);
+const [filters, setFilters] = useState({
+  startDate: new Date(today.getTime() + oneDayInMs).toISOString().split("T")[0],
+  endDate: new Date(today.getTime() + oneDayInMs).toISOString().split("T")[0],
+  keyword: "",
+  status: "",
+});
   const { user, userFetched, permissionDenied } = useAuth();
   const [fetching, setFetching] = useState(false);
 
@@ -32,7 +36,7 @@ const DirectQueryList = () => {
 
   useEffect(() => {
     if (user) {
-      fetchQueries(false);
+      fetchQueries(true);
     }
   }, [user]);
 
