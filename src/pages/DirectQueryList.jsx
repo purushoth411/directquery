@@ -15,20 +15,36 @@ import "react-datepicker/dist/react-datepicker.css";
 
 const DirectQueryList = () => {
   const socket = getSocket();
+  const [shouldRefetch, setShouldRefetch] = useState(false);
+
   const [queries, setQueries] = useState([]);
   const [loading, setLoading] = useState(false);
-  const today = new Date();
-const formattedToday = today.toISOString().split("T")[0];
-const oneDayInMs = 24 * 60 * 60 * 1000;
 
-const [startDate, setStartDate] = useState(today);
-const [endDate, setEndDate] = useState(today);
-const [filters, setFilters] = useState({
-  startDate: new Date(today.getTime() + oneDayInMs).toISOString().split("T")[0],
-  endDate: new Date(today.getTime() + oneDayInMs).toISOString().split("T")[0],
-  keyword: "",
-  status: "",
-});
+  function formatDateToYMD(date) {
+    if (!date) return "";
+    const year = date.getFullYear();
+    const month = `0${date.getMonth() + 1}`.slice(-2); // Months are 0-indexed
+    const day = `0${date.getDate()}`.slice(-2);
+    return `${year}-${month}-${day}`;
+  }
+  const today = new Date();
+  const formattedToday = formatDateToYMD(today);
+
+  const [startDate, setStartDate] = useState(today);
+  const [endDate, setEndDate] = useState(today);
+  const [filters, setFilters] = useState({
+    startDate: formattedToday,
+    endDate: formattedToday,
+    keyword: "",
+    status: "",
+  });
+  const [appliedFilters, setAppledFilters] = useState({
+    startDate: formattedToday,
+    endDate: formattedToday,
+    keyword: "",
+    status: "",
+  });
+
   const { user, userFetched, permissionDenied } = useAuth();
   const [fetching, setFetching] = useState(false);
 
@@ -36,58 +52,65 @@ const [filters, setFilters] = useState({
 
   useEffect(() => {
     if (user) {
-      fetchQueries(false);
+      fetchQueries(true);
     }
   }, [user]);
+  useEffect(() => {
+  if (shouldRefetch) {
+    fetchQueries(true);
+    setShouldRefetch(false);
+  }
+}, [filters]);
 
- useEffect(() => {
-  socket.on("newRequestCreated", (data) => {
-    toast("New Query Added", {
-      icon: "💬",
+
+  useEffect(() => {
+    socket.on("newRequestCreated", (data) => {
+      toast("New Query Added", {
+        icon: "💬",
+      });
+
+      const newQuery = {
+        added_by: 1,
+        added_on: dayjs().format("YYYY-MM-DD HH:mm:ss"),
+        assigned_by: null,
+        assigned_on: null,
+        assigned_to: 0,
+        id: Date.now(), // temporary ID
+        is_assigned: 2,
+        profile_id: 0,
+        query_details: data.query,
+        ref_id: null,
+        directQueryId: data.directQueryId || null, // if available
+      };
+
+      setQueries((prev) => [newQuery, ...prev]);
     });
 
-    const newQuery = {
-      added_by: 1,
-      added_on: dayjs().format("YYYY-MM-DD HH:mm:ss"),
-      assigned_by: null,
-      assigned_on: null,
-      assigned_to: 0,
-      id: Date.now(), // temporary ID
-      is_assigned: 2,
-      profile_id: 0,
-      query_details: data.query,
-      ref_id: null,
-      directQueryId: data.directQueryId || null // if available
+    socket.on("newRefAssigned", (data) => {
+      toast("Query Assigned", {
+        icon: "✅",
+      });
+
+      // Update the query with matching directQueryId
+      setQueries((prevQueries) =>
+        prevQueries.map((query) =>
+          query.id == data.directQueryId
+            ? {
+                ...query,
+                ref_id: data.ref_id,
+                assigned_on: data.assigned_on,
+                is_assigned: 1,
+              }
+            : query
+        )
+      );
+    });
+
+    return () => {
+      socket.off("newRequestCreated");
+      socket.off("newRefAssigned");
     };
-
-    setQueries((prev) => [newQuery, ...prev]);
-  });
-
-  socket.on("newRefAssigned", (data) => {
-    toast("Query Assigned", {
-      icon: "✅",
-    });
-
-    // Update the query with matching directQueryId
-    setQueries((prevQueries) =>
-      prevQueries.map((query) =>
-        query.id == data.directQueryId
-          ? {
-              ...query,
-              ref_id: data.ref_id,
-              assigned_on: data.assigned_on,
-              is_assigned: 1
-            }
-          : query
-      )
-    );
-  });
-
-  return () => {
-    socket.off("newRequestCreated");
-    socket.off("newRefAssigned");
-  };
-}, []);
+  }, []);
 
   useEffect(() => {
     // Apply tippy after queries are rendered
@@ -157,9 +180,19 @@ const [filters, setFilters] = useState({
       hour12: true, // use false for 24-hour format
     }).format(date);
   };
+  function formatDatedMY(dateString) {
+    if (!dateString) return "";
+    const date = new Date(dateString);
+    return date.toLocaleDateString("en-GB", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    });
+  }
 
   const handleFilterChange = (e) => {
     const { name, value } = e.target;
+    console.log(value);
     setFilters((prev) => ({ ...prev, [name]: value }));
   };
 
@@ -169,20 +202,35 @@ const [filters, setFilters] = useState({
       toast.error("Please select both From and End Date");
       return;
     }
+    setAppledFilters({
+      startDate: startDate,
+      endDate: endDate,
+      status: filters.status,
+      keyword: filters.keyword,
+    });
     fetchQueries(true);
   };
 
-  const handleRefresh = async () => {
-    setFilters({
-      startDate: "",
-      endDate: "",
-      status: "",
-      keyword: "",
-    });
-    setStartDate(null);
-    setEndDate(null);
-    await fetchQueries(false);
-  };
+  const handleRefresh = () => {
+  setShouldRefetch(true); // Add this state if not already
+  const today = formattedToday;
+
+  setFilters({
+    startDate: today,
+    endDate: today,
+    status: "",
+    keyword: "",
+  });
+  setAppledFilters({
+    startDate: today,
+    endDate: today,
+    status: "",
+    keyword: "",
+  });
+  setStartDate(today);
+  setEndDate(today);
+};
+
 
   const columns = [
     {
@@ -261,7 +309,7 @@ const [filters, setFilters] = useState({
           return `
         <a 
           href="https://instacrm.rapidcollaborate.com/workspace/addworkspace?direct_id=${encodedId}" 
-          target="" 
+          target="_blank" 
           rel="noopener noreferrer" 
           class="btn btn-sm n-btn btn-success"
         >
@@ -308,21 +356,12 @@ const [filters, setFilters] = useState({
                       const [start, end] = dates;
                       setStartDate(start);
                       setEndDate(end);
-
-                      const oneDayInMs = 24 * 60 * 60 * 1000;
+                      console.log("Start :", start, "  end:", end)
 
                       setFilters((prev) => ({
                         ...prev,
-                        startDate: start
-                          ? new Date(start.getTime() + oneDayInMs)
-                              .toISOString()
-                              .split("T")[0]
-                          : "",
-                        endDate: end
-                          ? new Date(end.getTime() + oneDayInMs)
-                              .toISOString()
-                              .split("T")[0]
-                          : "",
+                        startDate: formatDateToYMD(start),
+                        endDate: formatDateToYMD(end),
                       }));
                     }}
                     placeholderText="Select Date Range"
@@ -391,21 +430,51 @@ const [filters, setFilters] = useState({
                 </div>
               </div>
             ) : (
-              <DataTable
-                data={queries}
-                columns={columns}
-                className="table table-striped  table-hover"
-                options={{
-                  pageLength: 25,
-                  ordering: true,
-                  order: [],
-                  createdRow: (row, data) => {
-                    $(row)
-                      .find(".copy-ref-btn")
-                      .on("click", () => handleCopy(data));
-                  },
-                }}
-              />
+              <>
+             <div className="mb-2 mt-2 f-14 text-secondary">
+  {appliedFilters.startDate ||
+  appliedFilters.endDate ||
+  appliedFilters.keyword ||
+  appliedFilters.status ? (
+    <>
+      Showing results for{" "}
+      {[
+        appliedFilters.startDate && appliedFilters.endDate
+          ? `Date From ${formatDatedMY(appliedFilters.startDate)} to ${formatDatedMY(appliedFilters.endDate)}`
+          : null,
+        appliedFilters.keyword
+          ? `Keyword: "${appliedFilters.keyword}"`
+          : null,
+        appliedFilters.status !== ""
+          ? `Status: ${appliedFilters.status === "1" ? "Assigned" : "Not Assigned"}`
+          : null,
+      ]
+        .filter(Boolean)
+        .join(" | ")}
+    </>
+  ) : (
+    "Showing all results"
+  )}
+</div>
+
+
+
+                <DataTable
+                  data={queries}
+                  columns={columns}
+                  className="table table-striped  table-hover"
+                  options={{
+                    pageLength: 25,
+                    ordering: true,
+                    order: [],
+                    createdRow: (row, data) => {
+                      $(row)
+                        .find(".copy-ref-btn")
+                        .on("click", () => handleCopy(data));
+                    },
+                  }}
+                />
+              </>
             )}
           </div>
         </div>
